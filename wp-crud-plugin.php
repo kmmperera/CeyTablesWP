@@ -86,6 +86,8 @@ function wp_crud_plugin_menu() {
 
 // Plugin page to display data and add new rows
 function wp_crud_plugin_page() {
+
+    $total_amount=0;
     // Get table to display
     if (isset($_POST['selected_table'])) {
         $selected_table = sanitize_text_field($_POST['selected_table']);
@@ -137,7 +139,7 @@ function wp_crud_plugin_page() {
         // Display data from the selected table
         global $wpdb;
 
-        if (isset($_POST['search_date'])) {
+        if (isset($_POST['search_date']) && $_POST['search_date'] !== "") {
             $search_date = sanitize_text_field($_POST['search_date']);
             $results = wp_crud_search_data_by_date($selected_table, $search_date);
         } else {
@@ -178,7 +180,8 @@ function wp_crud_plugin_page() {
 
                                             <input type="hidden" name="delete_id" value="<?php echo esc_attr($row->id) ?>">
                                             <input type="hidden" name="delete_table" value="<?php echo esc_attr($selected_table)?>">
-                                            <input type="submit" value="Delete">
+                                            <button type="submit">Delete</button>
+
                                         </form>
 
                                 </td>
@@ -198,7 +201,7 @@ function wp_crud_plugin_page() {
                             <input type="hidden" name="action" value="custom_table_update">
                             <input type="hidden" name="update_table" id="ceymulticall-modal-table">
                             <div id="ceymulticall-modal-fields"></div>
-                            <input type="submit" value="Save Changes">
+                            <button type="submit">Save Changes</button>
 
                     </form>
              </div>
