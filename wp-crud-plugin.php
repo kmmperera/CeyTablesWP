@@ -32,6 +32,23 @@ function wp_crud_plugin_uninstall() {
     delete_option('wp_crud_plugin_tables');
 }
 
+function enqueue_custom_table_scripts() {
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('jquery-ui-dialog');
+    wp_enqueue_style('jquery-ui-css', '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css');
+    wp_enqueue_script('custom-table-crud', plugin_dir_url(__FILE__) . 'custom-table-crud.js', array('jquery', 'jquery-ui-dialog'), null, true);
+}
+add_action('wp_enqueue_scripts', 'enqueue_custom_table_scripts');
+add_action('admin_enqueue_scripts', 'enqueue_custom_table_scripts');
+
+
+
+
+
+
+
+
+
 // Function to create a new table
 function wp_crud_create_table($table_name, $columns) {
     global $wpdb;
@@ -91,6 +108,12 @@ function wp_crud_plugin_page() {
         echo '<div class="updated"><p>Row added successfully!</p></div>';
     }
 
+    if(isset($_POST['delete_id'])){
+        handle_custom_table_delete();
+    }
+    if(isset($_POST['update_table'])){
+        handle_custom_table_update();
+    }
     // Display form to select table and search by date
     ?>
     <div class="wrap">
@@ -123,11 +146,11 @@ function wp_crud_plugin_page() {
 
         ?>
         <div class="wrap">
-            <form method="post" action="">
+            <!-- <form method="post" action="">
                 <input type="hidden" name="selected_table" value="<?php echo esc_attr($selected_table); ?>">
                 <input type="date" name="search_date" value="<?php echo isset($search_date) ? esc_attr($search_date) : ''; ?>" placeholder="Search by date">
                 <input type="submit" value="Search">
-            </form>
+            </form> -->
 
             <table class="wp-list-table widefat fixed striped">
                 <thead>
@@ -147,6 +170,18 @@ function wp_crud_plugin_page() {
                                 <?php foreach ($columns as $column): ?>
                                     <td><?php echo esc_html($row->{$column->Field}); ?></td>
                                 <?php endforeach; ?>
+                                <td>
+                                        <button class="ceymulticall-open-modal" data-table="<?php echo esc_attr($selected_table) ?>" data-row="<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8')?>">Update</button>
+
+
+                                        <form method="post" action="" style="display:inline;">
+
+                                            <input type="hidden" name="delete_id" value="<?php echo esc_attr($row->id) ?>">
+                                            <input type="hidden" name="delete_table" value="<?php echo esc_attr($selected_table)?>">
+                                            <input type="submit" value="Delete">
+                                        </form>
+
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -156,6 +191,20 @@ function wp_crud_plugin_page() {
                     <?php endif; ?>
                 </tbody>
             </table>
+            <div id="ceymulticall-update-modal" title="Update Record" style="display:none;">
+
+                    <form id="ceymulticall-update-form" method="post" action="">
+
+                            <input type="hidden" name="action" value="custom_table_update">
+                            <input type="hidden" name="update_table" id="ceymulticall-modal-table">
+                            <div id="ceymulticall-modal-fields"></div>
+                            <input type="submit" value="Save Changes">
+
+                    </form>
+             </div>
+
+
+
 
             <h2>Add New Row</h2>
             <form method="post" action="">
@@ -322,4 +371,54 @@ function wp_crud_display_table_shortcode($atts) {
     <?php
     return ob_get_clean();
 }
+
+// Handle update actions
+function handle_custom_table_update() {
+    global $wpdb;
+
+    if (!empty($_POST['update_table'])) {
+        $table_name = sanitize_text_field($_POST['update_table']);
+        $data = $_POST;
+        unset($data['update_table'], $data['action']);
+
+        $id = intval($data['id']);
+        unset($data['id']);
+
+        // Sanitize data
+        foreach ($data as $key => $value) {
+            $data[$key] = sanitize_text_field($value);
+        }
+
+        $wpdb->update(
+            $table_name,
+            $data,
+            array('id' => $id)
+        );
+    }
+
+    echo '<div class="updated"><p>Row updated successfully!</p></div>';
+
+  //  wp_redirect($_SERVER['HTTP_REFERER']);
+   // exit;
+}
+
+// Handle delete actions
+function handle_custom_table_delete() {
+    global $wpdb;
+
+    if (!empty($_POST['delete_id']) && $_POST['delete_id'] !== false) {
+        $id = intval( $_POST['delete_id']);
+        $deleteTable=sanitize_text_field($_POST['delete_table']);
+        $wpdb->delete(
+            $deleteTable,
+            array('id' => $id),
+            array('%d')
+        );
+    }
+    echo '<div class="updated"><p>Row deleted successfully!</p></div>';
+
+//wp_redirect($_SERVER['HTTP_REFERER']);
+  //  exit;
+}
+
 ?>
