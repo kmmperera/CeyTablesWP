@@ -168,9 +168,21 @@ function wp_crud_plugin_page() {
                 <tbody>
                     <?php if ($results): ?>
                         <?php foreach ($results as $row): ?>
+
+                              <?php 
+                                   if($row->Amount){
+                                                
+                                        $total_amount +=   intval($row->Amount) ;
+
+                                      }
+                                  // var_dump($column);
+                               ?>
+
                             <tr>
                                 <?php foreach ($columns as $column): ?>
                                     <td><?php echo esc_html($row->{$column->Field}); ?></td>
+
+                                 
                                 <?php endforeach; ?>
                                 <td>
                                         <button class="ceymulticall-open-modal" data-table="<?php echo esc_attr($selected_table) ?>" data-row="<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8')?>">Update</button>
@@ -194,6 +206,9 @@ function wp_crud_plugin_page() {
                     <?php endif; ?>
                 </tbody>
             </table>
+            <div>
+              Total is:     <?php echo $total_amount; ?>                         
+            </div>
             <div id="ceymulticall-update-modal" title="Update Record" style="display:none;">
 
                     <form id="ceymulticall-update-form" method="post" action="">
